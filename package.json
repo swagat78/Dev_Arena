@@ -1,0 +1,14 @@
+{
+  "name": "mern-major-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix server run dev",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "sync:users": "node server/scripts/syncUsersSnapshot.js",
+    "users": "npm run sync:users && node -e \"console.log(require('fs').readFileSync('database/mongodb/users.snapshot.json','utf8'))\"",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server run start"
+  }
+}

@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(180deg, #020617 0%, #0b1120 100%);
+  color: #e2e8f0;
+}
+
+.glass {
+  @apply border border-slate-800/70 bg-slate-900/70 backdrop-blur;
+}
+
+html.light-mode body {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  color-scheme: light;
+}
+
+html.light-mode .bg-slate-950,
+html.light-mode .bg-\[\#121212\] {
+  background-color: #f1f5f9 !important;
+}
+
+html.light-mode .bg-slate-900,
+html.light-mode .bg-\[\#1a1a1a\],
+html.light-mode .bg-slate-900\/40,
+html.light-mode .bg-slate-900\/50,
+html.light-mode .bg-slate-900\/60,
+html.light-mode .bg-slate-900\/70,
+html.light-mode .bg-slate-950\/50,
+html.light-mode .bg-slate-950\/80,
+html.light-mode .bg-slate-800\/50,
+html.light-mode .bg-slate-800\/80 {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+html.light-mode .bg-slate-800,
+html.light-mode .bg-\[\#252525\],
+html.light-mode .bg-\[\#303030\] {
+  background-color: #f8fafc !important;
+}
+
+html.light-mode .text-slate-100, 
+html.light-mode .text-white,
+html.light-mode .text-zinc-200 {
+  color: #0f172a !important;
+}
+
+html.light-mode .text-slate-300, 
+html.light-mode .text-slate-400,
+html.light-mode .text-zinc-400,
+html.light-mode .text-zinc-500 {
+  color: #475569 !important;
+}
+
+html.light-mode .border-slate-800, 
+html.light-mode .border-slate-700,
+html.light-mode .border-\[\#303030\],
+html.light-mode .border-\[\#252525\] {
+  border-color: #e2e8f0 !important;
+}
+
+html.light-mode .glass {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}

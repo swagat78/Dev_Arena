@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-04-08T11:43:18.234Z",
+  "totalUsers": 1,
+  "users": [
+    {
+      "_id": "69c7dc502b3e54494e39b2ad",
+      "name": "Swagat Nayak",
+      "email": "nswagat49@gmail.com",
+      "profile": {
+        "fullName": "Swagat Nayak",
+        "bio": "",
+        "phone": "",
+        "location": "",
+        "avatarUrl": "",
+        "birthday": "",
+        "education": "",
+        "gender": "",
+        "github": "",
+        "linkedin": "",
+        "readme": "",
+        "skills": "",
+        "websites": "",
+        "work": "",
+        "x": ""
+      },
+      "lastLoginAt": "2026-04-08T11:43:18.232Z",
+      "loginCount": 2,
+      "createdAt": "2026-03-28T13:49:04.832Z",
+      "updatedAt": "2026-04-08T11:43:18.232Z"
+    }
+  ]
+}
