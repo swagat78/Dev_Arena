@@ -1,6 +1,6 @@
 # Dev_Arena
 
-Dev_Arena is a production-style MERN stack project built with modern tooling and modular architecture.
+Production-ready MERN coding platform with JWT authentication, coding problems, contests, submissions, analytics, and real-time interview rooms.
 
 ## Tech Stack
 
@@ -13,9 +13,10 @@ Dev_Arena is a production-style MERN stack project built with modern tooling and
 
 - Secure user registration and login
 - JWT-protected API routes
-- User profile management
-- Project CRUD operations
-- User-specific data isolation
+- Coding problems and solution workflow
+- Contests, submissions, and leaderboard-oriented modules
+- Analytics and user insights
+- Real-time interview room capabilities
 - Protected frontend routes with loading and alert states
 
 ## Project Structure
@@ -28,6 +29,7 @@ server/
   ├── models/
   ├── routes/
   ├── utils/
+  ├── scripts/
   ├── .env.example
   ├── package.json
   └── server.js
@@ -87,6 +89,6 @@ npm run dev
 
 ## GitHub
 
-Repository target: `https://github.com/swagat78/Dev_Arena`
+Repository: `https://github.com/swagat78/Dev_Arena`
 
-Account provided: `swagatnayak.xdev@gmail.com`
+Account: `swagatnayak.xdev@gmail.com`
