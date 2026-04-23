@@ -162,9 +162,13 @@ const DashboardPage = () => {
         <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between rounded-3xl bg-slate-900/50 p-6 shadow-xl border border-slate-800 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-brand-500 bg-slate-800 p-1">
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-indigo-600 font-bold text-white text-xl uppercase">
-                {user?.name?.charAt(0) || 'D'}
-              </div>
+              {user?.profile?.avatarUrl ? (
+                <img src={user.profile.avatarUrl} alt={user.name} className="h-full w-full rounded-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-indigo-600 font-bold text-white text-xl uppercase">
+                  {user?.name?.charAt(0) || 'D'}
+                </div>
+              )}
             </div>
             <div>
               <p className="text-sm font-medium tracking-wide text-brand-400 uppercase">Welcome back</p>
@@ -252,39 +256,53 @@ const DashboardPage = () => {
                 };
 
                 return (
-                  <div className="absolute right-0 mt-3 w-[340px] rounded-2xl border border-slate-700 bg-slate-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] z-[200] overflow-hidden">
-                    <div className="absolute -top-2 right-4 h-4 w-4 rotate-45 border-l border-t border-slate-700 bg-slate-800"></div>
-                    <div className="relative flex items-center justify-between px-4 py-3 border-b border-slate-700">
-                      <h3 className="font-bold text-white text-sm">Notifications {unreadCount > 0 && <span className="text-xs font-normal text-slate-400">({unreadCount} new)</span>}</h3>
-                      {unreadCount > 0 && (
-                        <button onClick={markAllRead} className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition">Mark all read</button>
-                      )}
-                    </div>
-                    <div className="relative max-h-[320px] overflow-y-auto">
-                      {notifs.map((n) => {
-                        const isRead = readNotifs.includes(n.id);
-                        return (
-                          <div
-                            key={n.id}
-                            onClick={() => markOneRead(n.id)}
-                            className={`flex gap-3 items-start px-4 py-3 cursor-pointer transition border-b border-slate-700/50 last:border-b-0 ${isRead ? 'opacity-60 hover:opacity-80' : 'hover:bg-slate-700/40'}`}
-                          >
-                            <div className={`flex-shrink-0 flex items-center justify-center rounded-xl ${n.iconBg} h-9 w-9 text-base border border-slate-700/30 mt-0.5`}>
-                              {n.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-slate-100 truncate">{n.title}</p>
-                                {!isRead && <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0"></span>}
+                  <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 z-[199]" onClick={() => setShowNotifications(false)} />
+                    <div className="fixed top-16 right-4 sm:right-8 w-[360px] sm:w-[400px] rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl z-[200] overflow-hidden" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50 bg-slate-800/50">
+                        <div className="flex items-center gap-2">
+                          <svg className="h-5 w-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                          <h3 className="font-bold text-white text-base">Notifications</h3>
+                          {unreadCount > 0 && <span className="ml-1 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{unreadCount}</span>}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {unreadCount > 0 && (
+                            <button onClick={markAllRead} className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition">Mark all read</button>
+                          )}
+                          <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white transition p-1">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      {/* Notification list */}
+                      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+                        {notifs.map((n) => {
+                          const isRead = readNotifs.includes(n.id);
+                          return (
+                            <div
+                              key={n.id}
+                              onClick={() => markOneRead(n.id)}
+                              className={`flex gap-3.5 items-start px-5 py-4 cursor-pointer transition-all border-b border-slate-800 last:border-b-0 ${isRead ? 'opacity-50 hover:opacity-70' : 'bg-slate-800/30 hover:bg-slate-800/60'}`}
+                            >
+                              <div className={`flex-shrink-0 flex items-center justify-center rounded-2xl ${n.iconBg} h-11 w-11 text-lg border border-slate-700/30`}>
+                                {n.icon}
                               </div>
-                              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{n.message}</p>
-                              <p className="text-[10px] font-semibold text-slate-500 mt-1.5 uppercase tracking-wider">{formatTimeAgo(n.time)}</p>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-semibold text-white">{n.title}</p>
+                                  {!isRead && <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0 animate-pulse"></span>}
+                                </div>
+                                <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">{n.message}</p>
+                                <p className="text-[11px] font-medium text-slate-500 mt-2 uppercase tracking-wider">{formatTimeAgo(n.time)}</p>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 );
               })()}
             </div>

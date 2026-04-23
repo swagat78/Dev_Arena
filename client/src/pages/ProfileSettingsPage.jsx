@@ -18,6 +18,8 @@ const ProfileSettingsPage = () => {
   const [editValue, setEditValue] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState('');
 
   // File input ref for avatar
   const fileInputRef = useRef(null);
@@ -134,13 +136,51 @@ const ProfileSettingsPage = () => {
     return placeholders[key] || `Enter your ${key}`;
   };
 
+  // Detect current location via GPS
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setLocationLoading(true);
+    setLocationError('');
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`);
+          const data = await res.json();
+          const addr = data.address || {};
+          const city = addr.city || addr.town || addr.village || addr.county || '';
+          const state = addr.state || '';
+          const country = addr.country || '';
+          const parts = [city, state, country].filter(Boolean);
+          setEditValue(parts.join(', '));
+        } catch {
+          setLocationError('Could not determine your location. Please type it manually.');
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (err) => {
+        setLocationLoading(false);
+        if (err.code === 1) {
+          setLocationError('Location access denied. Please enable it in your browser settings, or type manually.');
+        } else {
+          setLocationError('Could not get location. Please type it manually.');
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: false }
+    );
+  };
+
   // Get field description for modal
   const getFieldDescription = (key) => {
     const descriptions = {
       name: 'This is how other developers will see you on the platform.',
       fullName: 'Your legal name for certificates and verification.',
       gender: 'Select your gender identity.',
-      location: 'Where are you based? Type your city and country.',
+      location: 'Detect your location automatically or type it manually.',
       birthday: 'Select your date of birth from the calendar.',
       websites: 'Your personal website or portfolio URL.',
       github: 'Link your GitHub profile to showcase your work.',
@@ -149,7 +189,7 @@ const ProfileSettingsPage = () => {
       readme: 'A short bio that appears on your profile. Tell others about yourself.',
       work: 'Your current company or job title.',
       education: 'Your educational background.',
-      skills: 'Comma-separated list of your technical skills.',
+      skills: 'Comma-separated list of your technical skills.'
     };
     return descriptions[key] || '';
   };
@@ -472,6 +512,55 @@ const ProfileSettingsPage = () => {
                     className="w-full rounded-xl border border-slate-600/50 bg-slate-900/60 px-4 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder-slate-500 transition-all resize-none"
                     placeholder={getFieldPlaceholder(editingField)}
                   />
+                ) : editingField === 'location' ? (
+                  <div className="space-y-3">
+                    {/* Use my location button */}
+                    <button
+                      type="button"
+                      onClick={detectCurrentLocation}
+                      disabled={locationLoading}
+                      className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-500/20 disabled:opacity-60"
+                    >
+                      {locationLoading ? (
+                        <>
+                          <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                          Detecting your location...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          Use My Current Location
+                        </>
+                      )}
+                    </button>
+
+                    {locationError && (
+                      <div className="flex items-start gap-2 text-xs text-amber-400 bg-amber-500/10 px-3 py-2 rounded-lg border border-amber-500/20">
+                        <svg className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                        {locationError}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <div className="h-px flex-1 bg-slate-700/50" />
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">or type manually</span>
+                      <div className="h-px flex-1 bg-slate-700/50" />
+                    </div>
+
+                    <input 
+                      type="text"
+                      value={editValue} 
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="w-full rounded-xl border border-slate-600/50 bg-slate-900/60 px-4 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder-slate-500 transition-all"
+                      placeholder="e.g. Mumbai, Maharashtra, India"
+                    />
+                    {editValue && (
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        {editValue}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <input 
                     type={['github', 'linkedin', 'x', 'websites'].includes(editingField) ? 'url' : 'text'} 

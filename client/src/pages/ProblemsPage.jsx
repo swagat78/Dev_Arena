@@ -106,17 +106,27 @@ const ProblemsPage = () => {
               </button>
               
               {isDropdownOpen && (
-                <div className="absolute top-16 left-0 right-0 z-[200] mt-2 overflow-hidden rounded-2xl border-2 border-slate-500 bg-slate-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)]">
-                  {['', 'easy', 'medium', 'hard'].map((opt) => (
+                <div className="absolute top-full left-0 right-0 z-[300] mt-2 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+                  {[
+                    { val: '', label: 'All Difficulties', color: '' },
+                    { val: 'easy', label: 'Easy', color: 'text-emerald-400' },
+                    { val: 'medium', label: 'Medium', color: 'text-amber-400' },
+                    { val: 'hard', label: 'Hard', color: 'text-rose-400' },
+                  ].map((opt) => (
                     <button
-                      key={opt}
+                      key={opt.val}
                       onClick={() => {
-                        setFilters(prev => ({ ...prev, difficulty: opt }));
+                        setFilters(prev => ({ ...prev, difficulty: opt.val }));
                         setIsDropdownOpen(false);
                       }}
-                      className="w-full text-left px-5 py-3.5 text-sm font-bold transition-colors hover:bg-slate-700 text-slate-200 hover:text-white border-b border-slate-700/80 last:border-b-0"
+                      className={`w-full text-left px-5 py-3.5 text-sm font-semibold transition-colors hover:bg-slate-800 border-b border-slate-800 last:border-b-0 flex items-center justify-between ${
+                        filters.difficulty === opt.val ? 'bg-slate-800 text-white' : 'text-slate-300'
+                      }`}
                     >
-                      {opt ? opt.charAt(0).toUpperCase() + opt.slice(1) : 'All Difficulties'}
+                      <span className={opt.color}>{opt.label}</span>
+                      {filters.difficulty === opt.val && (
+                        <svg className="h-4 w-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      )}
                     </button>
                   ))}
                 </div>
