@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -14,6 +14,10 @@ const MOCK_LOCATIONS = {
   }
 };
 
+const MAX_AVATAR_SIZE = 200 * 1024; // 200KB
+
+const PROFILE_FIELDS = ['fullName', 'gender', 'location', 'birthday', 'websites', 'github', 'linkedin', 'x', 'readme', 'work', 'education', 'skills', 'avatarUrl'];
+
 const ProfileSettingsPage = () => {
   const { user, updateProfile } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -24,16 +28,24 @@ const ProfileSettingsPage = () => {
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // For cascading location
   const [locCountry, setLocCountry] = useState('India');
   const [locState, setLocState] = useState('Odisha');
   const [locCity, setLocCity] = useState('Jeypore');
-  const [showCountrySearch, setShowCountrySearch] = useState(false);
-  const [countrySearchTerm, setCountrySearchTerm] = useState('');
+
+  // File input ref for avatar
+  const fileInputRef = useRef(null);
+
+  // Profile completion
+  const profile = user?.profile || {};
+  const filledCount = PROFILE_FIELDS.filter(f => profile[f]).length;
+  const completionPercent = Math.round((filledCount / PROFILE_FIELDS.length) * 100);
 
   const handleEditClick = (fieldKey, currentValue) => {
     setEditingField(fieldKey);
+    setUploadError('');
     if (fieldKey === 'location') {
       const parts = (currentValue || 'India, Odisha, Jeypore').split(', ').map(s => s.trim());
       setLocCountry(parts[0] || 'India');
@@ -47,6 +59,7 @@ const ProfileSettingsPage = () => {
   const handleCloseModal = () => {
     setEditingField(null);
     setEditValue('');
+    setUploadError('');
   };
 
   const handleSaveModal = async () => {
@@ -67,6 +80,62 @@ const ProfileSettingsPage = () => {
     }
   };
 
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file (JPG, PNG, GIF, WebP)');
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      setUploadError(`Image too large. Max size: ${MAX_AVATAR_SIZE / 1024}KB. Try a smaller image.`);
+      return;
+    }
+
+    setUploadError('');
+    setIsUpdating(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result;
+        setEditValue(base64);
+        try {
+          await updateProfile({ avatarUrl: base64 });
+          setEditingField(null);
+        } catch (err) {
+          console.error('Failed to upload avatar', err);
+          setUploadError('Failed to save avatar. Please try again.');
+        } finally {
+          setIsUpdating(false);
+        }
+      };
+      reader.onerror = () => {
+        setUploadError('Failed to read file. Please try again.');
+        setIsUpdating(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setIsUpdating(false);
+      setUploadError('Unexpected error. Please try again.');
+    }
+  };
+
+  const removeAvatar = async () => {
+    setIsUpdating(true);
+    try {
+      await updateProfile({ avatarUrl: '' });
+      setEditingField(null);
+    } catch (err) {
+      console.error('Failed to remove avatar', err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const memberSince = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
+
   const renderSettingRow = (icon, label, fieldKey, fallbackValue) => {
     const currentValue = fieldKey === 'name' ? user?.name : user?.profile?.[fieldKey];
     const displayValue = currentValue || fallbackValue;
@@ -80,7 +149,7 @@ const ProfileSettingsPage = () => {
           <div className="text-slate-400 group-hover:text-indigo-400 transition-colors">{icon}</div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
             <span className="text-[15px] font-semibold text-slate-200">{label}</span>
-            {displayValue && <span className="text-[13.5px] text-slate-400 font-medium">{displayValue}</span>}
+            {displayValue && <span className={`text-[13.5px] font-medium ${currentValue ? 'text-slate-400' : 'text-slate-500 italic'}`}>{displayValue}</span>}
           </div>
         </div>
         <div className="text-slate-500 group-hover:text-indigo-400 transition-colors">
@@ -96,8 +165,8 @@ const ProfileSettingsPage = () => {
     <div className="min-h-screen bg-slate-950 flex justify-center pb-20 relative">
       <div className="w-full max-w-[1020px] flex flex-col pt-4">
         
-        {/* TOP BAR / HEADER representing Photo 2 Header */}
-        <header className="flex items-center justify-between px-6 py-4 rounded-3xl border border-slate-800 bg-slate-900 shadow-xl mb-10 mx-6">
+        {/* TOP BAR */}
+        <header className="flex items-center justify-between px-6 py-4 rounded-3xl border border-slate-800 bg-slate-900 shadow-xl mb-8 mx-6">
           <Link to="/dashboard" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-semibold">
              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
              Dashboard
@@ -136,22 +205,57 @@ const ProfileSettingsPage = () => {
           </div>
         </header>
 
-        {/* PROFILE AVATAR BLOCK */}
-        <div className="flex justify-center mb-12">
-          <div className="relative group cursor-pointer rounded-3xl" onClick={() => handleEditClick('avatarUrl', user?.profile?.avatarUrl)}>
-            <div className="h-36 w-36 rounded-3xl bg-slate-900 border-2 border-slate-800 flex items-center justify-center overflow-hidden shadow-2xl transition-transform group-hover:scale-105">
-               {user?.profile?.avatarUrl ? (
-                 <img src={user.profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-               ) : (
-                 <div className="flex flex-col items-center justify-center h-full w-full bg-slate-800 text-slate-500">
-                   <svg className="h-16 w-16 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                 </div>
-               )}
+        {/* PROFILE HERO SECTION */}
+        <div className="mx-6 mb-10 relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl">
+          {/* Gradient Cover */}
+          <div className="h-32 sm:h-40 bg-gradient-to-br from-indigo-600 via-brand-600 to-purple-700 relative">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15),transparent)]" />
+          </div>
+          
+          <div className="px-6 sm:px-8 pb-6">
+            {/* Avatar — overlapping the cover */}
+            <div className="-mt-16 mb-4 flex items-end gap-5">
+              <div
+                className="relative group cursor-pointer flex-shrink-0"
+                onClick={() => handleEditClick('avatarUrl', user?.profile?.avatarUrl)}
+              >
+                <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-2xl bg-slate-800 border-4 border-slate-900 flex items-center justify-center overflow-hidden shadow-2xl transition-transform group-hover:scale-105">
+                   {user?.profile?.avatarUrl ? (
+                     <img src={user.profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                   ) : (
+                     <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                       <span className="text-4xl font-bold">{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
+                     </div>
+                   )}
+                </div>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex flex-col items-center justify-center backdrop-blur-sm">
+                   <svg className="h-7 w-7 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                   <span className="text-[10px] font-bold text-white tracking-wide uppercase">Change Photo</span>
+                </div>
+              </div>
+
+              <div className="mb-2 flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight truncate">{user?.name || 'Developer'}</h1>
+                <p className="text-sm text-slate-400 mt-1">{user?.email}</p>
+                {memberSince && <p className="text-xs text-slate-500 mt-1">Member since {memberSince}</p>}
+              </div>
             </div>
-            {/* Edit Avatar Overlay */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl flex flex-col items-center justify-center backdrop-blur-sm border border-slate-700">
-               <svg className="h-8 w-8 text-white mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-               <span className="text-xs font-bold text-white tracking-wide">Edit Avatar</span>
+
+            {/* Profile completion bar */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/50 px-5 py-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-slate-200">Profile Completion</span>
+                <span className={`text-sm font-bold ${completionPercent >= 80 ? 'text-emerald-400' : completionPercent >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                  {completionPercent}%
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-slate-800">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${completionPercent >= 80 ? 'bg-emerald-500' : completionPercent >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                  style={{ width: `${completionPercent}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-2">{filledCount} of {PROFILE_FIELDS.length} fields completed</p>
             </div>
           </div>
         </div>
@@ -189,26 +293,77 @@ const ProfileSettingsPage = () => {
         </div>
       </div>
 
-      {/* POPUP MODAL ENHANCEMENT */}
+      {/* EDIT MODAL */}
       {editingField && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-slate-700 bg-slate-800 p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl border border-slate-700 bg-slate-800 p-6 shadow-2xl relative">
             <button 
               onClick={handleCloseModal}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white transition bg-slate-900 rounded-full p-1"
+              className="absolute top-5 right-5 text-slate-400 hover:text-white transition bg-slate-900 rounded-full p-1.5 hover:bg-slate-700"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             
             <div className="flex items-center gap-2 text-indigo-400 mb-6">
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
               <h3 className="text-xl font-bold text-white tracking-wide">
-                Update {editingField.charAt(0).toUpperCase() + editingField.slice(1).replace(/([A-Z])/g, ' $1').trim()}
+                {editingField === 'avatarUrl' ? 'Profile Photo' : `Update ${editingField.charAt(0).toUpperCase() + editingField.slice(1).replace(/([A-Z])/g, ' $1').trim()}`}
               </h3>
             </div>
 
             <div className="mb-8">
-              {editingField === 'gender' ? (
+              {editingField === 'avatarUrl' ? (
+                <div className="flex flex-col items-center gap-5">
+                  {/* Preview */}
+                  <div className="h-32 w-32 rounded-2xl bg-slate-900 border-2 border-slate-700 overflow-hidden flex items-center justify-center">
+                    {(editValue || user?.profile?.avatarUrl) ? (
+                      <img src={editValue || user.profile.avatarUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                        <span className="text-3xl font-bold">{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Error */}
+                  {uploadError && (
+                    <p className="text-sm text-rose-400 text-center">{uploadError}</p>
+                  )}
+
+                  {/* Upload button */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleAvatarFileChange}
+                    className="hidden"
+                  />
+                  <div className="flex gap-3 w-full">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUpdating}
+                      className="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-500 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {isUpdating ? 'Uploading...' : 'Choose Photo'}
+                    </button>
+                    {user?.profile?.avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={removeAvatar}
+                        disabled={isUpdating}
+                        className="rounded-xl bg-rose-600/20 px-4 py-3 text-sm font-bold text-rose-400 transition hover:bg-rose-600/30 disabled:opacity-50 border border-rose-500/20"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 text-center">JPG, PNG, GIF, WebP. Max 200KB.</p>
+                </div>
+              ) : editingField === 'gender' ? (
                 <div className="relative">
                   <select 
                     value={editValue} 
@@ -247,7 +402,7 @@ const ProfileSettingsPage = () => {
                 </div>
               ) : (
                 <input 
-                  type={['github', 'linkedin', 'x', 'websites', 'avatarUrl'].includes(editingField) ? 'url' : 'text'} 
+                  type={['github', 'linkedin', 'x', 'websites'].includes(editingField) ? 'url' : 'text'} 
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                   autoFocus
@@ -257,21 +412,23 @@ const ProfileSettingsPage = () => {
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-4">
-              <button 
-                onClick={handleCloseModal}
-                className="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-600 shadow-sm"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSaveModal}
-                disabled={isUpdating}
-                className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-500 disabled:opacity-50 shadow-lg shadow-indigo-500/30"
-              >
-                {isUpdating ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+            {editingField !== 'avatarUrl' && (
+              <div className="flex justify-end gap-3 mt-4">
+                <button 
+                  onClick={handleCloseModal}
+                  className="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-600 shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveModal}
+                  disabled={isUpdating}
+                  className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-500 disabled:opacity-50 shadow-lg shadow-indigo-500/30"
+                >
+                  {isUpdating ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

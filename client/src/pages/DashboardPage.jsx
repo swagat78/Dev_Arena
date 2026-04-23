@@ -1,10 +1,111 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
 import LoadingScreen from '../components/LoadingScreen';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { analyticsApi, contestApi } from '../services/api';
+
+const NOTIF_READ_KEY = 'dev_arena_notif_read';
+
+const generateNotifications = (user, stats) => {
+  const notifications = [];
+  const now = new Date();
+
+  // Welcome notification
+  notifications.push({
+    id: 'welcome',
+    icon: '🚀',
+    iconBg: 'bg-brand-500/20',
+    title: 'Welcome to Dev Arena!',
+    message: 'Your coding journey starts here. Try solving your first problem.',
+    time: user?.createdAt ? new Date(user.createdAt) : now,
+  });
+
+  // Profile completion
+  const profile = user?.profile || {};
+  const filledFields = ['fullName', 'gender', 'location', 'github', 'linkedin', 'work', 'education', 'skills', 'avatarUrl']
+    .filter((f) => profile[f]);
+  if (filledFields.length < 5) {
+    notifications.push({
+      id: 'profile_incomplete',
+      icon: '👤',
+      iconBg: 'bg-amber-500/20',
+      title: 'Complete your profile',
+      message: `You've filled ${filledFields.length}/9 fields. A complete profile helps you stand out.`,
+      time: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+    });
+  } else {
+    notifications.push({
+      id: 'profile_complete',
+      icon: '✅',
+      iconBg: 'bg-emerald-500/20',
+      title: 'Profile looking great!',
+      message: `${filledFields.length}/9 profile fields completed. Well done!`,
+      time: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+    });
+  }
+
+  // Stats-based
+  const solved = stats?.solvedProblems || 0;
+  if (solved === 0) {
+    notifications.push({
+      id: 'first_problem',
+      icon: '💡',
+      iconBg: 'bg-indigo-500/20',
+      title: 'Solve your first challenge',
+      message: 'Head to Problems to start solving. Every journey begins with one step.',
+      time: new Date(now.getTime() - 4 * 60 * 60 * 1000),
+    });
+  } else if (solved >= 5) {
+    notifications.push({
+      id: 'milestone_5',
+      icon: '🏅',
+      iconBg: 'bg-yellow-500/20',
+      title: `${solved} problems solved!`,
+      message: "You're making excellent progress. Keep the momentum going!",
+      time: new Date(now.getTime() - 6 * 60 * 60 * 1000),
+    });
+  }
+
+  // Account age
+  if (user?.createdAt) {
+    const daysSinceJoin = Math.floor((now - new Date(user.createdAt)) / 86400000);
+    if (daysSinceJoin >= 7) {
+      notifications.push({
+        id: 'one_week',
+        icon: '📅',
+        iconBg: 'bg-purple-500/20',
+        title: `${daysSinceJoin} days on Dev Arena`,
+        message: "You've been a member for over a week. Great commitment!",
+        time: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      });
+    }
+  }
+
+  // Contest reminder
+  notifications.push({
+    id: 'contest_reminder',
+    icon: '🏆',
+    iconBg: 'bg-rose-500/20',
+    title: 'Upcoming contests',
+    message: 'Check out this week\'s coding challenges and compete for the leaderboard.',
+    time: new Date(now.getTime() - 10 * 60 * 60 * 1000),
+  });
+
+  return notifications.sort((a, b) => b.time - a.time);
+};
+
+const formatTimeAgo = (date) => {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
 
 const DashboardPage = () => {
   const { user, token, logout } = useAuth();
@@ -13,6 +114,9 @@ const DashboardPage = () => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [readNotifs, setReadNotifs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(NOTIF_READ_KEY)) || []; } catch { return []; }
+  });
   const notifRef = useRef(null);
 
   useEffect(() => {
@@ -117,33 +221,72 @@ const DashboardPage = () => {
                 title="Notifications"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 border-2 border-slate-900"></span>
-                </span>
+                {(() => {
+                  const notifs = generateNotifications(user, stats);
+                  const unread = notifs.filter(n => !readNotifs.includes(n.id)).length;
+                  return unread > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex items-center justify-center rounded-full h-4 w-4 bg-rose-500 text-[9px] font-bold text-white border-2 border-slate-900">{unread}</span>
+                    </span>
+                  ) : null;
+                })()}
               </button>
 
-              {showNotifications && (
-                <div className="absolute right-0 mt-3 w-80 rounded-2xl border-2 border-slate-500 bg-slate-800 p-4 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] z-[200]">
-                  <div className="absolute -top-2 right-4 h-4 w-4 rotate-45 border-l-2 border-t-2 border-slate-500 bg-slate-800"></div>
-                  <div className="relative flex items-center justify-between mb-3 pb-3 border-b border-slate-700">
-                    <h3 className="font-bold text-white text-base">Notifications</h3>
-                    <button className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition">Mark all as read</button>
-                  </div>
-                  <div className="relative flex flex-col gap-3">
-                    <div className="flex gap-4 items-start p-3 rounded-xl hover:bg-slate-700 transition cursor-pointer border border-transparent hover:border-slate-600">
-                      <div className="flex items-center justify-center rounded-full bg-brand-500/20 p-2 text-brand-400 mt-1 shadow-inner border border-brand-500/30">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-100">Welcome to LexAI Core</p>
-                        <p className="text-[13px] text-slate-300 mt-1 leading-snug">Ready to tackle your first problem?</p>
-                        <p className="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-wide">Just now</p>
-                      </div>
+              {showNotifications && (() => {
+                const notifs = generateNotifications(user, stats);
+                const unreadCount = notifs.filter(n => !readNotifs.includes(n.id)).length;
+                
+                const markAllRead = () => {
+                  const ids = notifs.map(n => n.id);
+                  setReadNotifs(ids);
+                  localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(ids));
+                };
+
+                const markOneRead = (id) => {
+                  if (!readNotifs.includes(id)) {
+                    const next = [...readNotifs, id];
+                    setReadNotifs(next);
+                    localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(next));
+                  }
+                };
+
+                return (
+                  <div className="absolute right-0 mt-3 w-[340px] rounded-2xl border border-slate-700 bg-slate-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] z-[200] overflow-hidden">
+                    <div className="absolute -top-2 right-4 h-4 w-4 rotate-45 border-l border-t border-slate-700 bg-slate-800"></div>
+                    <div className="relative flex items-center justify-between px-4 py-3 border-b border-slate-700">
+                      <h3 className="font-bold text-white text-sm">Notifications {unreadCount > 0 && <span className="text-xs font-normal text-slate-400">({unreadCount} new)</span>}</h3>
+                      {unreadCount > 0 && (
+                        <button onClick={markAllRead} className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition">Mark all read</button>
+                      )}
+                    </div>
+                    <div className="relative max-h-[320px] overflow-y-auto">
+                      {notifs.map((n) => {
+                        const isRead = readNotifs.includes(n.id);
+                        return (
+                          <div
+                            key={n.id}
+                            onClick={() => markOneRead(n.id)}
+                            className={`flex gap-3 items-start px-4 py-3 cursor-pointer transition border-b border-slate-700/50 last:border-b-0 ${isRead ? 'opacity-60 hover:opacity-80' : 'hover:bg-slate-700/40'}`}
+                          >
+                            <div className={`flex-shrink-0 flex items-center justify-center rounded-xl ${n.iconBg} h-9 w-9 text-base border border-slate-700/30 mt-0.5`}>
+                              {n.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-slate-100 truncate">{n.title}</p>
+                                {!isRead && <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0"></span>}
+                              </div>
+                              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{n.message}</p>
+                              <p className="text-[10px] font-semibold text-slate-500 mt-1.5 uppercase tracking-wider">{formatTimeAgo(n.time)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             <button
