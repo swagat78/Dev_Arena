@@ -115,7 +115,7 @@ const RegisterPage = () => {
             <input
               id="name" name="name" type="text" value={formData.name} onChange={handleChange}
               className="w-full rounded-xl border border-slate-700 bg-slate-800/50 pl-11 pr-4 py-3 text-slate-100 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 placeholder-slate-500"
-              placeholder="John Doe"
+              placeholder="Your full name"
             />
           </div>
         </div>

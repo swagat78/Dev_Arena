@@ -261,3 +261,62 @@ html.light-mode .text-indigo-300 {
 html.light-mode .min-h-screen.bg-slate-950 {
   background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%) !important;
 }
+
+/* Fix problem cards and inner page cards in light mode */
+html.light-mode .bg-slate-900.rounded-3xl,
+html.light-mode .bg-slate-900.rounded-2xl,
+html.light-mode article.rounded-3xl {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Fix notification dropdown in light mode */
+html.light-mode .rounded-2xl.border.border-slate-700.bg-slate-800 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Fix modal in light mode */
+html.light-mode .bg-slate-800\/95,
+html.light-mode .bg-slate-800.rounded-2xl {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light-mode .bg-slate-900\/60,
+html.light-mode .bg-slate-800\/50,
+html.light-mode .bg-slate-900\/40 {
+  background-color: #f8fafc !important;
+}
+
+/* Fix radio buttons and settings rows in light mode */
+html.light-mode .bg-slate-800\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light-mode .bg-slate-900\/80 {
+  background-color: #ffffff !important;
+}
+
+html.light-mode .bg-slate-950\/40,
+html.light-mode .bg-slate-950\/80,
+html.light-mode .bg-slate-950\/50 {
+  background-color: #f8fafc !important;
+}
+
+
+/* Fix tags/badges */
+html.light-mode .bg-slate-800.rounded-lg {
+  background-color: #f1f5f9 !important;
+}
+
+/* Fix date input in light mode */
+html.light-mode input[type="date"] {
+  color-scheme: light !important;
+}
+
+/* Keep gradient buttons visible in light mode */
+html.light-mode .bg-indigo-600 {
+  background-color: #4f46e5 !important;
+}
+
