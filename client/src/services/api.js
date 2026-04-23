@@ -20,7 +20,7 @@ const request = async (endpoint, options = {}) => {
       },
     });
   } catch (networkError) {
-    throw new Error('Unable to reach server. Please ensure backend is running on http://localhost:5001');
+    throw new Error(`Unable to reach server. Please ensure backend is running on ${API_URL.replace('/api', '')}`);
   }
 
   const data = await parseJson(response);
