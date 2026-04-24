@@ -236,75 +236,6 @@ const DashboardPage = () => {
                   ) : null;
                 })()}
               </button>
-
-              {showNotifications && (() => {
-                const notifs = generateNotifications(user, stats);
-                const unreadCount = notifs.filter(n => !readNotifs.includes(n.id)).length;
-                
-                const markAllRead = () => {
-                  const ids = notifs.map(n => n.id);
-                  setReadNotifs(ids);
-                  localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(ids));
-                };
-
-                const markOneRead = (id) => {
-                  if (!readNotifs.includes(id)) {
-                    const next = [...readNotifs, id];
-                    setReadNotifs(next);
-                    localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(next));
-                  }
-                };
-
-                return (
-                  <>
-                    {/* Backdrop */}
-                    <div className="fixed inset-0 z-[199]" onClick={() => setShowNotifications(false)} />
-                    <div className="fixed top-16 right-4 sm:right-8 w-[360px] sm:w-[400px] rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl z-[200] overflow-hidden" style={{ maxHeight: 'calc(100vh - 100px)' }}>
-                      {/* Header */}
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50 bg-slate-800/50">
-                        <div className="flex items-center gap-2">
-                          <svg className="h-5 w-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                          <h3 className="font-bold text-white text-base">Notifications</h3>
-                          {unreadCount > 0 && <span className="ml-1 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{unreadCount}</span>}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {unreadCount > 0 && (
-                            <button onClick={markAllRead} className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition">Mark all read</button>
-                          )}
-                          <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white transition p-1">
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        </div>
-                      </div>
-                      {/* Notification list */}
-                      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
-                        {notifs.map((n) => {
-                          const isRead = readNotifs.includes(n.id);
-                          return (
-                            <div
-                              key={n.id}
-                              onClick={() => markOneRead(n.id)}
-                              className={`flex gap-3.5 items-start px-5 py-4 cursor-pointer transition-all border-b border-slate-800 last:border-b-0 ${isRead ? 'opacity-50 hover:opacity-70' : 'bg-slate-800/30 hover:bg-slate-800/60'}`}
-                            >
-                              <div className={`flex-shrink-0 flex items-center justify-center rounded-2xl ${n.iconBg} h-11 w-11 text-lg border border-slate-700/30`}>
-                                {n.icon}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-sm font-semibold text-white">{n.title}</p>
-                                  {!isRead && <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0 animate-pulse"></span>}
-                                </div>
-                                <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">{n.message}</p>
-                                <p className="text-[11px] font-medium text-slate-500 mt-2 uppercase tracking-wider">{formatTimeAgo(n.time)}</p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
             </div>
 
             <button
@@ -512,6 +443,77 @@ const DashboardPage = () => {
           </section>
         </div>
       </div>
+
+      {/* Notification panel — rendered at root level to avoid z-index clipping */}
+      {showNotifications && (() => {
+        const notifs = generateNotifications(user, stats);
+        const unreadCount = notifs.filter(n => !readNotifs.includes(n.id)).length;
+        
+        const markAllRead = () => {
+          const ids = notifs.map(n => n.id);
+          setReadNotifs(ids);
+          localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(ids));
+        };
+
+        const markOneRead = (id) => {
+          if (!readNotifs.includes(id)) {
+            const next = [...readNotifs, id];
+            setReadNotifs(next);
+            localStorage.setItem(NOTIF_READ_KEY, JSON.stringify(next));
+          }
+        };
+
+        return (
+          <>
+            <div className="fixed inset-0 z-[9998] bg-black/30 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
+            <div className="fixed top-4 right-4 sm:right-8 w-[360px] sm:w-[420px] rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl z-[9999] overflow-hidden" style={{ maxHeight: 'calc(100vh - 32px)' }}>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50 bg-gradient-to-r from-slate-800 to-slate-800/80">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/20">
+                    <svg className="h-4 w-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">Notifications</h3>
+                    {unreadCount > 0 && <p className="text-[11px] text-brand-400 font-medium">{unreadCount} unread</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition px-2 py-1 rounded-lg hover:bg-brand-500/10">Mark all read</button>
+                  )}
+                  <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-700">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+                {notifs.map((n) => {
+                  const isRead = readNotifs.includes(n.id);
+                  return (
+                    <div
+                      key={n.id}
+                      onClick={() => markOneRead(n.id)}
+                      className={`flex gap-3.5 items-start px-5 py-4 cursor-pointer transition-all border-b border-slate-800/60 last:border-b-0 ${isRead ? 'opacity-40 hover:opacity-60' : 'hover:bg-slate-800/40'}`}
+                    >
+                      <div className={`flex-shrink-0 flex items-center justify-center rounded-2xl ${n.iconBg} h-11 w-11 text-lg border border-slate-700/30`}>
+                        {n.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-white">{n.title}</p>
+                          {!isRead && <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0 animate-pulse"></span>}
+                        </div>
+                        <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">{n.message}</p>
+                        <p className="text-[11px] font-medium text-slate-500 mt-2 uppercase tracking-wider">{formatTimeAgo(n.time)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 };

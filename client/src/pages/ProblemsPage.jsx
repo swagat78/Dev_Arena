@@ -55,7 +55,7 @@ const ProblemsPage = () => {
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 sm:px-6 lg:px-10">
       <div className="mx-auto w-full flex flex-col gap-8">
-        <header className="relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-8 shadow-2xl">
+        <header className="relative rounded-3xl bg-slate-900 border border-slate-800 p-8 shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-brand-900/40 via-blue-900/20 to-transparent"></div>
           <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div className="flex-1">
