@@ -54,6 +54,8 @@ const userSchema = new mongoose.Schema(
     },
     username: { type: String, unique: true, sparse: true, trim: true },
     problemsSolved: { type: Number, default: 0 },
+    totalSubmissions: { type: Number, default: 0 },
+    acceptedSubmissions: { type: Number, default: 0 },
     rank: { type: Number, default: 0 },
     acceptanceRate: { type: Number, default: 0 }
   },

@@ -1,9 +1,41 @@
 import express from 'express';
+import path from 'path';
+import multer from 'multer';
 import { User } from '../models/User.js';
 import { Submission } from '../models/Submission.js';
 import { Achievement } from '../models/Achievement.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+
+// Setup multer for local storage
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'public/uploads/');
+  },
+  filename(req, file, cb) {
+    cb(null, `${req.user._id}-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+const checkFileType = (file, cb) => {
+  const filetypes = /jpg|jpeg|png|webp/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (extname && mimetype) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Images only (jpg, png, jpeg, webp)!'));
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: function (req, file, cb) {
+    checkFileType(file, cb);
+  },
+});
 
 const router = express.Router();
 
@@ -81,6 +113,40 @@ router.get('/profile', protect, asyncHandler(async (req, res) => {
     acceptanceRate: dynamicAcceptanceRate,
     activityHeatmap,
     achievements
+  });
+}));
+
+router.patch('/avatar', protect, upload.single('image'), asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No image provided or invalid file type');
+  }
+
+  // Construct URL
+  const serverUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://your-production-url.com' // You'd set a SERVER_URL env in prod
+    : 'http://localhost:5001';
+    
+  const avatarUrl = `${serverUrl}/uploads/${req.file.filename}`;
+
+  // Initialize profile if it doesn't exist
+  if (!user.profile) {
+    user.profile = {};
+  }
+
+  user.profile.avatarUrl = avatarUrl;
+  await user.save();
+
+  res.json({
+    success: true,
+    avatar: avatarUrl
   });
 }));
 

@@ -4,6 +4,7 @@ import express from 'express';
 import http from 'http';
 import morgan from 'morgan';
 import path from 'path';
+import fs from 'fs';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 
@@ -22,6 +23,11 @@ import { ensureLeetSeedData } from './utils/seedLeetData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 
@@ -72,6 +78,7 @@ const io = new Server(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));

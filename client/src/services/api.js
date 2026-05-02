@@ -61,6 +61,23 @@ export const authApi = {
 
 export const userApi = {
   getProfile: (token) => request('/user/profile', { token }),
+  updateAvatar: async (formData, token) => {
+    // We cannot use the default request wrapper because it stringifies JSON and sets Content-Type to application/json.
+    // For FormData, we must let fetch set the Content-Type automatically.
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/user/avatar`, {
+      method: 'PATCH',
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.text().then(text => text ? JSON.parse(text) : {});
+    if (!response.ok) {
+      throw new Error(data.message || 'Image upload failed');
+    }
+    return data;
+  },
 };
 
 export const projectApi = {

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Problem } from '../models/Problem.js';
 import { Submission } from '../models/Submission.js';
 import { Notification } from '../models/Notification.js';
+import { User } from '../models/User.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { evaluateSubmission } from '../utils/codeExecutor.js';
 import { checkAndAwardAchievements } from '../utils/achievementEngine.js';
@@ -56,8 +57,25 @@ export const createSubmission = asyncHandler(async (req, res) => {
   });
 
   problem.totalSubmissions += 1;
+  const user = await User.findById(req.user._id);
+  user.totalSubmissions += 1;
+
   if (verdict.status === 'accepted') {
     problem.acceptedSubmissions += 1;
+    user.acceptedSubmissions += 1;
+    
+    // Check if problem was already solved
+    const existingAccepted = await Submission.findOne({
+      user: req.user._id,
+      problem: problem._id,
+      status: 'accepted',
+      _id: { $ne: submission._id }
+    });
+
+    if (!existingAccepted) {
+      user.problemsSolved += 1;
+    }
+
     await Notification.create({
       user: req.user._id,
       type: 'submission_success',
@@ -74,7 +92,11 @@ export const createSubmission = asyncHandler(async (req, res) => {
       link: `/problems/${problem.slug}`,
     });
   }
+  
+  user.acceptanceRate = Math.round((user.acceptedSubmissions / user.totalSubmissions) * 100);
+  
   await problem.save();
+  await user.save();
 
   // Asynchronously check and award achievements in the background
   checkAndAwardAchievements(req.user._id);

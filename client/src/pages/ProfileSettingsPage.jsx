@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import AvatarUploadModal from '../components/ui/AvatarUploadModal';
 
 const MAX_AVATAR_SIZE = 200 * 1024; // 200KB
 
@@ -12,6 +13,7 @@ const ProfileSettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   
   // Modal State
   const [editingField, setEditingField] = useState(null);
@@ -311,7 +313,10 @@ const ProfileSettingsPage = () => {
                    <div className="absolute top-2 right-2 h-[18px] w-[18px] rounded-full bg-emerald-500 border-2 border-slate-900 z-20 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
                    
                    {/* Hover overlay */}
-                   <div className="absolute inset-1.5 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.6rem] flex flex-col items-center justify-center backdrop-blur-sm z-30">
+                   <div 
+                     className="absolute inset-1.5 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.6rem] flex flex-col items-center justify-center backdrop-blur-sm z-30 cursor-pointer"
+                     onClick={() => setIsAvatarModalOpen(true)}
+                   >
                      <svg className="h-7 w-7 text-white mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                      <span className="text-[11px] font-black text-white tracking-widest uppercase">Change</span>
                    </div>
@@ -614,6 +619,10 @@ const ProfileSettingsPage = () => {
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
+      <AvatarUploadModal 
+        isOpen={isAvatarModalOpen} 
+        onClose={() => setIsAvatarModalOpen(false)} 
+      />
     </div>
   );
 };
