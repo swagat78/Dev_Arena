@@ -11,11 +11,13 @@ import { connectDB } from './config/db.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import contestRoutes from './routes/contestRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 import problemRoutes from './routes/problemRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import submissionRoutes from './routes/submissionRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import { ensureLeetSeedData } from './utils/seedLeetData.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -95,6 +97,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/interviews', interviewRoutes);

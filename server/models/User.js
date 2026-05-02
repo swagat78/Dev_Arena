@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    username: { type: String, unique: true, sparse: true, trim: true },
+    problemsSolved: { type: Number, default: 0 },
+    rank: { type: Number, default: 0 },
+    acceptanceRate: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

@@ -2,8 +2,10 @@ import mongoose from 'mongoose';
 
 import { Problem } from '../models/Problem.js';
 import { Submission } from '../models/Submission.js';
+import { Notification } from '../models/Notification.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { evaluateSubmission } from '../utils/codeExecutor.js';
+import { checkAndAwardAchievements } from '../utils/achievementEngine.js';
 
 const getVerdictLabel = (status) => {
   const labels = {
@@ -56,8 +58,26 @@ export const createSubmission = asyncHandler(async (req, res) => {
   problem.totalSubmissions += 1;
   if (verdict.status === 'accepted') {
     problem.acceptedSubmissions += 1;
+    await Notification.create({
+      user: req.user._id,
+      type: 'submission_success',
+      title: 'Problem Solved 🎉',
+      message: `You solved ${problem.title}`,
+      link: `/problems/${problem.slug}`,
+    });
+  } else {
+    await Notification.create({
+      user: req.user._id,
+      type: 'submission_failed',
+      title: 'Submission Failed ❌',
+      message: `Your solution for ${problem.title} received ${getVerdictLabel(verdict.status)}`,
+      link: `/problems/${problem.slug}`,
+    });
   }
   await problem.save();
+
+  // Asynchronously check and award achievements in the background
+  checkAndAwardAchievements(req.user._id);
 
   const populated = await Submission.findById(submission._id)
     .populate('problem', 'title slug difficulty')
@@ -78,6 +98,15 @@ export const getMySubmissions = asyncHandler(async (req, res) => {
     .populate('problem', 'title slug difficulty')
     .sort({ createdAt: -1 })
     .limit(100);
+
+  res.json(submissions.map((submission) => withVerdictLabel(submission)));
+});
+
+export const getRecentSubmissions = asyncHandler(async (req, res) => {
+  const submissions = await Submission.find({ user: req.user._id })
+    .populate('problem', 'title slug difficulty')
+    .sort({ createdAt: -1 })
+    .limit(10);
 
   res.json(submissions.map((submission) => withVerdictLabel(submission)));
 });

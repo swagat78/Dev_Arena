@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 
 import { User } from '../models/User.js';
+import { Notification } from '../models/Notification.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { generateToken } from '../utils/generateToken.js';
 import { writeUsersSnapshot } from '../utils/userSnapshot.js';
@@ -36,6 +37,14 @@ export const registerUser = asyncHandler(async (req, res) => {
     email: email.toLowerCase().trim(),
     password: hashedPassword,
     profile: { fullName: name.trim() },
+  });
+
+  await Notification.create({
+    user: user._id,
+    type: 'system',
+    title: 'Welcome to Dev Arena 🚀',
+    message: 'You joined Dev Arena. Start solving problems to grow.',
+    isRead: false
   });
 
   await writeUsersSnapshot();
@@ -95,6 +104,26 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
   if (name?.trim()) {
     user.name = name.trim();
+  }
+
+  const isValidUrl = (string) => {
+    if (!string) return true;
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const urlFields = { websites, github, linkedin, x };
+  for (const [key, value] of Object.entries(urlFields)) {
+    if (value !== undefined && value.trim() !== '') {
+      if (!isValidUrl(value.trim())) {
+        res.status(400);
+        throw new Error(`Invalid URL format for ${key}`);
+      }
+    }
   }
 
   user.profile = {

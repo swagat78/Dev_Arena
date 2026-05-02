@@ -209,45 +209,46 @@ const ProfileSettingsPage = () => {
     return icons[key] || <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>;
   };
 
-  const renderSettingRow = (icon, label, fieldKey, fallbackValue) => {
+  const renderSettingRow = (icon, label, fieldKey, emptyHelper, badgeType = 'optional') => {
     const currentValue = fieldKey === 'name' ? user?.name : user?.profile?.[fieldKey];
-    const displayValue = currentValue || fallbackValue;
     const isFilled = Boolean(currentValue);
 
     return (
       <div 
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/50 hover:bg-slate-800/60 hover:shadow-xl hover:shadow-indigo-500/10 h-full flex flex-col"
+        className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-700 bg-slate-900/40 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:bg-slate-800/60 hover:shadow-md h-full flex flex-col"
         onClick={() => handleEditClick(fieldKey, currentValue)}
       >
-        <div className="absolute top-4 right-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-indigo-400 translate-y-1 group-hover:translate-y-0">
+        <div className="absolute top-4 right-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-blue-400 translate-y-1 group-hover:translate-y-0">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
         </div>
         
         <div className="flex items-start gap-4 flex-1">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-800 border border-slate-700 text-slate-300 group-hover:bg-indigo-500/20 group-hover:text-indigo-300 transition-colors">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-800 border border-slate-700 text-slate-300 group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-colors">
             {icon}
           </div>
           <div className="flex flex-col gap-1 min-w-0 flex-1 pr-6">
             <h3 className="text-sm font-bold text-slate-200">{label}</h3>
-            {displayValue ? (
-               <p className={`text-[13px] leading-relaxed truncate ${isFilled ? 'text-slate-400 group-hover:text-slate-300' : 'text-slate-500 italic'}`}>
-                 {fieldKey === 'birthday' && currentValue ? new Date(currentValue).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : displayValue}
+            {isFilled ? (
+               <p className="text-[13px] leading-relaxed truncate text-slate-300">
+                 {fieldKey === 'birthday' && currentValue ? new Date(currentValue).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : currentValue}
                </p>
-            ) : null}
+            ) : (
+               <p className="text-[13px] text-slate-500 italic">
+                 {emptyHelper}
+               </p>
+            )}
           </div>
         </div>
         
-        <div className="mt-4 flex items-center gap-2 border-t border-slate-800/50 pt-3">
+        <div className="mt-4 flex items-center gap-2 pt-3">
           {isFilled ? (
-            <>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-              <span className="text-[10px] font-bold text-emerald-500 tracking-wider uppercase">Completed</span>
-            </>
+            <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-300 border border-slate-700">
+              Completed
+            </span>
           ) : (
-            <>
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-              <span className="text-[10px] font-bold text-amber-500 tracking-wider uppercase">Action Required</span>
-            </>
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border ${badgeType === 'recommended' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : badgeType === 'incomplete' ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-800 text-slate-500 border-slate-700/50'}`}>
+              {badgeType === 'recommended' ? 'Recommended' : badgeType === 'incomplete' ? 'Incomplete' : 'Optional'}
+            </span>
           )}
         </div>
       </div>
@@ -259,44 +260,22 @@ const ProfileSettingsPage = () => {
       <div className="w-full max-w-[1020px] flex flex-col pt-4">
         
         {/* TOP BAR */}
-        <header className="flex items-center justify-between px-6 py-3.5 rounded-2xl border border-slate-800 bg-slate-900/80 shadow-lg mb-8 mx-6 backdrop-blur-xl">
-          <Link to="/dashboard" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2.5 text-sm font-semibold group">
-             <svg className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-             Dashboard
-          </Link>
+        <div className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 mb-8 py-4 px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-             <div className="relative hidden sm:block">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search settings..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-slate-950/80 text-slate-200 border border-slate-700/50 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors w-[240px]"
-                />
-             </div>
-             
-             <button onClick={toggleTheme} className="text-slate-400 hover:text-white transition-colors bg-slate-800/50 p-2 rounded-xl hover:bg-slate-700 border border-slate-700/30">
-                {theme === 'dark' ? (
-                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                ) : (
-                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                )}
-             </button>
-             
-             <div className="h-9 w-9 rounded-xl overflow-hidden border-2 border-slate-700/50 shadow-sm cursor-pointer hover:border-indigo-500 transition-colors">
-               {user?.profile?.avatarUrl ? (
-                 <img src={user.profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-               ) : (
-                 <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs">
-                   {user?.name?.charAt(0).toUpperCase() || 'U'}
-                 </div>
-               )}
-             </div>
+            <Link to="/dashboard" className="flex items-center justify-center h-10 w-10 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-colors">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </Link>
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-0.5 uppercase tracking-wider">Dashboard / Settings</div>
+              <h1 className="text-xl font-bold text-white leading-none">Profile Settings</h1>
+            </div>
           </div>
-        </header>
+          <div className="flex items-center gap-3">
+            <button className="hidden sm:flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20" onClick={() => window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})}>
+              Complete Profile
+            </button>
+          </div>
+        </div>
 
         {/* PROFILE HERO SECTION */}
         <div className="mx-6 mb-10 relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl">
@@ -360,26 +339,62 @@ const ProfileSettingsPage = () => {
             </div>
 
             {/* Profile completion bar */}
-            <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 px-5 py-3.5">
-              <div className="flex items-center justify-between mb-2">
+            <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 px-5 py-4 mt-4 w-full max-w-2xl">
+              <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold text-slate-300">Profile Completion</span>
-                <span className={`text-sm font-bold ${completionPercent >= 80 ? 'text-emerald-400' : completionPercent >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                <span className={`text-sm font-bold ${completionPercent >= 80 ? 'text-emerald-400' : completionPercent >= 50 ? 'text-blue-400' : 'text-slate-400'}`}>
                   {completionPercent}%
                 </span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-slate-800">
+              <div className="h-2 w-full rounded-full bg-slate-800">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${completionPercent >= 80 ? 'bg-gradient-to-r from-emerald-500 to-green-400' : completionPercent >= 50 ? 'bg-gradient-to-r from-amber-500 to-yellow-400' : 'bg-gradient-to-r from-rose-500 to-pink-400'}`}
+                  className={`h-full rounded-full transition-all duration-700 ${completionPercent >= 80 ? 'bg-gradient-to-r from-emerald-500 to-green-400' : completionPercent >= 50 ? 'bg-gradient-to-r from-blue-500 to-indigo-400' : 'bg-slate-500'}`}
                   style={{ width: `${completionPercent}%` }}
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-1.5">{filledCount} of {PROFILE_FIELDS.length} fields completed</p>
+              <p className="text-xs text-slate-400 mt-2 text-left">{filledCount} of {PROFILE_FIELDS.length} fields completed. A complete profile helps you connect better.</p>
             </div>
           </div>
         </div>
 
         {/* SETTINGS LIST */}
         <div className="px-6 flex flex-col gap-10 max-w-[840px] mx-auto w-full">
+          <section>
+             <div className="flex items-center gap-2 mb-4">
+               <div className="h-1 w-1 rounded-full bg-indigo-500"></div>
+               <h2 className="text-base font-bold text-slate-100 uppercase tracking-wider">General</h2>
+             </div>
+             <p className="text-sm text-slate-400 mb-4">Manage your basic profile information.</p>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderSettingRow(<svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>, "Display Name", "name", "Not added yet", "recommended")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>, "Full Legal Name", "fullName", "Tell us your legal name", "recommended")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>, "Gender", "gender", "Not added yet", "optional")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>, "Location", "location", "Where are you based?", "recommended")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>, "Birthday", "birthday", "Not added yet", "optional")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>, "Websites", "websites", "Add your personal website", "optional")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>, "Github", "github", "Add your GitHub link", "recommended")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>, "LinkedIn", "linkedin", "Add your LinkedIn profile", "optional")}
+                {renderSettingRow(<span className="font-bold text-[15px]">𝕏</span>, "X / Twitter", "x", "Add your X handle", "optional")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>, "About Me", "readme", "Write a short intro about yourself", "recommended")}
+              </div>
+          </section>
+
+          <section className="mb-12">
+             <div className="flex items-center gap-2 mb-4">
+               <div className="h-1 w-1 rounded-full bg-emerald-500"></div>
+               <h2 className="text-base font-bold text-slate-100 uppercase tracking-wider">Experience</h2>
+             </div>
+             <p className="text-sm text-slate-400 mb-4">Share your professional journey.</p>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>, "Work", "work", "Add your current role", "optional")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>, "Education", "education", "Add your education details", "optional")}
+                {renderSettingRow(<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>, "Skills", "skills", "List your top skills", "recommended")}
+              </div>
+          </section>
+
+        </div>
+      </div>
+
       {/* ====== PREMIUM EDIT MODAL ====== */}
       {editingField && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={handleCloseModal}>

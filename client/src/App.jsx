@@ -16,7 +16,7 @@ import RegisterPage from './pages/RegisterPage';
 import SubmissionsPage from './pages/SubmissionsPage';
 import UsersInsightsPage from './pages/UsersInsightsPage';
 import ProfileSettingsPage from './pages/ProfileSettingsPage';
-
+import PublicProfilePage from './pages/PublicProfilePage';
 const App = () => {
   return (
     <Routes>
@@ -36,7 +36,8 @@ const App = () => {
         <Route path="/contests" element={<ContestsPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/users-insights" element={<UsersInsightsPage />} />
-        <Route path="/profile" element={<ProfileSettingsPage />} />
+        <Route path="/profile" element={<PublicProfilePage />} />
+        <Route path="/settings" element={<ProfileSettingsPage />} />
         <Route path="/interview/:roomId" element={<InterviewRoomPage />} />
       </Route>
 

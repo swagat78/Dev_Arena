@@ -59,6 +59,10 @@ export const authApi = {
     }),
 };
 
+export const userApi = {
+  getProfile: (token) => request('/user/profile', { token }),
+};
+
 export const projectApi = {
   getAll: (token) => request('/projects', { token }),
   create: (payload, token) =>
@@ -127,11 +131,18 @@ export const submissionApi = {
     const query = problemId ? `?problemId=${problemId}` : '';
     return request(`/submissions${query}`, { token });
   },
+  getRecent: (token) => request('/submissions/recent', { token }),
 };
 
 export const contestApi = {
   getAll: (token) => request('/contests', { token }),
   getBySlug: (slug, token) => request(`/contests/${slug}`, { token }),
+};
+
+export const notificationApi = {
+  getAll: (token) => request('/notifications', { token }),
+  markAsRead: (id, token) => request(`/notifications/${id}/read`, { method: 'PATCH', token }),
+  markAllAsRead: (token) => request('/notifications/read-all', { method: 'PATCH', token }),
 };
 
 export const analyticsApi = {
