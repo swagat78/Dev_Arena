@@ -1,31 +1,7 @@
 {
-  "generatedAt": "2026-05-02T10:50:50.593Z",
+  "generatedAt": "2026-05-02T19:29:52.078Z",
   "totalUsers": 2,
   "users": [
-    {
-      "_id": "69f5a7932b27c96dd208dbe6",
-      "name": "Swagat",
-      "email": "swagatnayak.xdev@gmail.com",
-      "profile": {
-        "fullName": "Swagat Nayak",
-        "gender": "",
-        "location": "",
-        "birthday": "",
-        "websites": "",
-        "github": "",
-        "linkedin": "",
-        "x": "",
-        "readme": "",
-        "work": "",
-        "education": "",
-        "skills": "",
-        "avatarUrl": ""
-      },
-      "lastLoginAt": "2026-05-02T09:50:52.095Z",
-      "loginCount": 3,
-      "createdAt": "2026-05-02T07:28:19.698Z",
-      "updatedAt": "2026-05-02T10:50:48.804Z"
-    },
     {
       "_id": "69ea8ac981c306b8aec9cfb4",
       "name": "Swagat Nayak",
@@ -45,10 +21,34 @@
         "skills": "",
         "avatarUrl": ""
       },
-      "lastLoginAt": "2026-05-02T08:09:32.248Z",
-      "loginCount": 6,
+      "lastLoginAt": "2026-05-02T19:29:51.791Z",
+      "loginCount": 8,
       "createdAt": "2026-04-23T21:10:33.018Z",
-      "updatedAt": "2026-05-02T08:09:32.249Z"
+      "updatedAt": "2026-05-02T19:29:51.792Z"
+    },
+    {
+      "_id": "69f5a7932b27c96dd208dbe6",
+      "name": "Swagat",
+      "email": "swagatnayak.xdev@gmail.com",
+      "profile": {
+        "fullName": "Swagat Nayak",
+        "gender": "",
+        "location": "",
+        "birthday": "",
+        "websites": "",
+        "github": "",
+        "linkedin": "",
+        "x": "",
+        "readme": "",
+        "work": "",
+        "education": "",
+        "skills": "",
+        "avatarUrl": "http://localhost:5001/uploads/69f5a7932b27c96dd208dbe6-1777746562574.jpg"
+      },
+      "lastLoginAt": "2026-05-02T18:39:23.022Z",
+      "loginCount": 5,
+      "createdAt": "2026-05-02T07:28:19.698Z",
+      "updatedAt": "2026-05-02T18:39:23.111Z"
     }
   ]
 }
