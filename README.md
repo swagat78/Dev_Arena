@@ -12,11 +12,11 @@ A production-grade, full-stack MERN competitive coding platform built for develo
 |---|---|
 | **Frontend** | React 18 (Vite), Tailwind CSS, React Router v6 |
 | **Backend** | Node.js, Express.js, Socket.IO |
-| **Database** | MongoDB + Mongoose ODM |
+| **Database** | MongoDB Atlas + Mongoose ODM |
 | **Authentication** | JWT (JSON Web Tokens), bcrypt (12 salt rounds) |
 | **File Uploads** | Multer (local disk storage) |
 | **Geolocation** | OpenStreetMap Nominatim API (reverse geocoding) |
-| **Deployment** | Vercel (Frontend), Render / Railway (Backend) |
+| **Deployment** | Vercel (Frontend), Render + Cron-Job.org (Backend), MongoDB Atlas (Database) |
 
 ---
 
